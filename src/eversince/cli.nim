@@ -161,18 +161,10 @@ proc readText(path: string): string =
   try: readFile(path)
   except IOError: fail(exitCannot, "cannot read " & path)
 
-proc cleanAssert(msg: string): string =
-  ## `doAssert` messages look like "model.nim(36, 7) `cond` text": keep the text.
-  let a = msg.find('`')
-  if a >= 0:
-    let b = msg.find('`', a + 1)
-    if b > a: return msg[b + 1 .. ^1].strip
-  msg
-
 proc loadModel*(path: string): tuple[model: Model, text: string] =
   result.text = readText(path)
   try: result.model = parseModel(result.text)
-  except AssertionDefect as e: fail(exitFail, path & " does not parse: " & cleanAssert(e.msg))
+  except ModelParseError as e: fail(exitFail, path & " does not parse: " & e.msg)
 
 proc codeLines(m: Model): seq[string] =
   m.blocks.filterIt(it.kind in codeKinds).mapIt(it.canonical)

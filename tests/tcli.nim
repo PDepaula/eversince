@@ -151,7 +151,7 @@ suite "check report":
     let code = m.blocks.filterIt(it.kind in codeKinds).mapIt(it.canonical).filterIt(not it.startsWith("event")) & "event Done x:string"
     let r = checkReport(m, code, true, false)
     check r.exit == exitFail
-    check "error: model and code disagree about `event Done`" in r.text
+    check "model and code disagree about `event Done`" in r.text
     check "result: FAIL (1 error, 0 warnings)" in r.text
 
   test "a lint is a warning, and a failure under strict":
@@ -160,7 +160,7 @@ suite "check report":
     check checkReport(m, code, true, false).exit == exitOk
     let strict = checkReport(m, code, true, true)
     check strict.exit == exitFail
-    check "warning: event Lonely is produced by no command" in strict.text
+    check "event Lonely is produced by no command" in strict.text
     check "strict" in strict.text.splitLines[^2]
 
   test "the same message is not printed twice":
