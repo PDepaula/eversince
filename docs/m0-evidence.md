@@ -24,7 +24,7 @@ nim c -r -d:release examples/desk/demo.nim 20000
 | Prototype claim | Result here |
 |---|---|
 | 20 of 20 scenarios pass | `20 passed, 0 failed` |
-| Same state after replay from memory, JSON lines and SQLite | `all 6 hashes equal: true`, every hash `C2ADF9049F862B58`, 16 events (6 commands accepted, 4 refused) |
+| Same state after replay from memory, JSON lines and SQLite | `all 6 hashes equal: true`, every hash `53aac55296edd566`, 16 events (6 commands accepted, 4 refused); the hash is the state digest of `spec/12-state-digest.md` (M0 printed a Nim-only hash, `C2ADF9049F862B58`) |
 | A torn last line is skipped | `torn tail: 16 events read, same state: true` |
 | Log line form | first line `{"seq":1,"at":1700000001000,"kind":"MessageSent","data":{"game":"cat","text":"make the cat jump higher"}}` |
 | Size line | `size: 8 commands, 9 events, 2 views, 2 query/queries, 2 processors, 2 screens, 6 slices` |

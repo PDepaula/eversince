@@ -1,13 +1,13 @@
 ## The desk example: its 20 scenarios, and replay giving the same state from the memory store and
 ## the JSON-lines store, including a log whose last line was cut short.
-import std/[unittest, os, strutils, hashes]
+import std/[unittest, os, strutils]
 import eversince
 import ../examples/desk/desk
 
 let scenarioFile = currentSourcePath().parentDir / ".." / "examples" / "desk" / "scenarios.jsonl"
 let work = getTempDir() / "eversince-tdesk"
 
-proc stateHash(app: DeskApp): string = toHex(hash($(%app)).int, 16)
+proc stateHash(app: DeskApp): string = stateDigest(app)
 
 proc script(rt: var Runtime[DeskApp]) =
   var tick = 1_700_000_000_000'i64

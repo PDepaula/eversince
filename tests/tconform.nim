@@ -185,14 +185,16 @@ suite "fixtures: event log":
           var complete = readFile(path).splitLines.filterIt(it.len > 0)
           check complete.len == events.len
           for i, e in events: check e.toLine == complete[i]
-        if then.hasKey("view"):
+        if then.hasKey("view") or then.hasKey("digest"):
           check c["app"].getStr == "desk"
           var app: DeskApp
           for e in events: apply(app, e)
           let all = %app
-          for name, want in then["view"]:
-            let got = all{lowerFirst(name)}
-            for key, val in want: check got{key} == val
+          if then.hasKey("view"):
+            for name, want in then["view"]:
+              let got = all{lowerFirst(name)}
+              for key, val in want: check got{key} == val
+          if then.hasKey("digest"): check stateDigest(app) == then["digest"].getStr
 
 # -- scenarios ---------------------------------------------------------------------------------
 
