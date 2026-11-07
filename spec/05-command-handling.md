@@ -33,7 +33,8 @@ An unknown command name is refused with the code `unknownCommand` and the name a
    MAY have side effects. The commands it issues are collected, and when every event has been
    given to every processor, the collected commands are handled one after another, each by
    these same steps, in the order they were issued. A refusal of an issued command is not an
-   error of the original command.
+   error of the original command. Each processor remembers how far it has got:
+   [06-processors.md](06-processors.md).
 
 Only one command is handled at a time. A command that arrives while another is being handled
 waits for it.
@@ -49,14 +50,11 @@ were stored as the events of the commands they issued.
 A processor MAY be given the same event more than once (after a restart, for instance), so the
 commands it issues MUST be safe to repeat: a repeated command is refused, for example with a
 `stale...` code, instead of being applied twice. The desk example shows the pattern with
-`staleTurn` and `staleStep`.
+`staleTurn` and `staleStep`. Positions and the rules of delivery are in
+[06-processors.md](06-processors.md).
 
 ## Draft notes
 
-- The prototype runs processors inline, in the same thread, inside the one call that handles the
-  command. It has no queue, no thread and no remembered position per processor.
 - The prototype's store interface is `append`, `load` and `close`. Its append takes the events
   of one command together, which is the atomic unit above. Views are not written into the
   store.
-- The prototype does not give a processor "at least once" delivery: it delivers once, in
-  process, and loses undelivered events on a crash. Remembered positions are milestone M2.

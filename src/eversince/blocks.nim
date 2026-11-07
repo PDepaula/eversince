@@ -16,6 +16,7 @@ const
   regCommands = CacheSeq"eversince.commands" ## "Command View,View"
   regQueries = CacheSeq"eversince.queries"   ## "Query View,View"
   regProcOn = CacheSeq"eversince.procOn"     ## "Processor Event"
+  regProcs = CacheSeq"eversince.procs"       ## processor names, in declaration order
 
 
 proc where(n: NimNode): string {.compileTime.} =
@@ -249,6 +250,7 @@ proc processorImpl(name, body: NimNode): NimNode {.compileTime.} =
     fn[3][2][1] = st[1]
     fn[6] = newStmtList(prelude(), st[2])
     result.add fn
+  regProcs.add newLit(n)
   register Block(kind: "processor", name: n, edges: @[("consumes", consumes), ("issues", issues)]), name
 
 macro processor*(name, body: untyped): untyped =
@@ -257,7 +259,7 @@ macro processor*(name, body: untyped): untyped =
   guard processorImpl(name, body)
 
 macro sealModel*(appName: untyped, modelFile: static string): untyped =
-  ## Call once, after every block is declared. Generates the app type and the four dispatchers,
+  ## Call once, after every block is declared. Generates the app type and the dispatchers,
   ## and stops the build when the model file and the code disagree.
   let app = $appName
   let code = toSeq(regLines).mapIt(it.strVal)
@@ -308,6 +310,16 @@ macro sealModel*(appName: untyped, modelFile: static string): untyped =
   for (ev, owners) in byEvent(regProcOn):
     src.add "  of \"" & ev & "\":\n    let e = env.data.to(" & ev & ")\n"
     for p in owners: src.add "    react(" & p & ", e, issueCb)\n"
+  src.add "  else: discard\n"
+  src.add "proc processors*(app: " & app & "): seq[string] = @[" & toSeq(regProcs).mapIt(escape(it.strVal)).join(", ") & "]\n"
+  src.add "proc deliver*(app: " & app & ", processor: string, env: Envelope, issueCb: IssueProc) =\n  case processor\n"
+  for p in regProcs:
+    src.add "  of \"" & p.strVal & "\":\n    case env.kind\n"
+    for row in regProcOn:
+      let r = row.strVal.split(' ')
+      if r[0] == p.strVal:
+        src.add "    of \"" & r[1] & "\": react(" & r[0] & ", env.data.to(" & r[1] & "), issueCb)\n"
+    src.add "    else: discard\n"
   src.add "  else: discard\n"
   proc viewArgs(row: string): string =
     let p = row.split(' ')

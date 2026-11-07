@@ -12,6 +12,7 @@ language needs only a JSON parser, the kit's model-file parser and the kit's des
 | Event envelope and log ([04](../04-event-envelope.md)) | [`log/cases.jsonl`](log/cases.jsonl) and the `log/*.jsonl` logs it names | [Log](#log) |
 | State digest ([12](../12-state-digest.md)) | [`digest/cases.jsonl`](digest/cases.jsonl) and the `digest` of the log cases | [State digest](#state-digest) |
 | Forgetting ([14](../14-forgetting.md)) | [`forget/cases.jsonl`](forget/cases.jsonl) and the logs it names | [Forgetting](#forgetting) |
+| Processors ([06](../06-processors.md)) | [`processors/cases.jsonl`](processors/cases.jsonl) | [Processors](#processors) |
 | Scenarios ([11](../11-scenarios.md)) | [`scenarios/pass.jsonl`](scenarios/pass.jsonl), [`scenarios/fail.jsonl`](scenarios/fail.jsonl) and the 20 desk scenarios [`examples/desk/scenarios.jsonl`](../../examples/desk/scenarios.jsonl) | [Scenarios](#scenarios) |
 
 ## Conventions
@@ -139,6 +140,30 @@ bytes of the file named by `then.file`:
 
 A case with no `steps` shows what opening the log does (the cap, a torn tail).
 
+## Processors
+
+`processors/cases.jsonl`, for the desk app. Each case sets up a log and the positions the
+processors remembered, does something, and says what the log and the positions then hold:
+
+| Field | Meaning |
+|---|---|
+| `app` | `"desk"`. |
+| `log` | The events already in the log, `{"kind", "data"}`, oldest first; their `seq` are 1, 2, 3, ... |
+| `positions` | `{processor: seq}`: the positions remembered before. A processor not listed has none. |
+| `deliver` | Optional. A list of `{"processor", "seq"}`: give that event of the log to that processor, in this order, and handle the commands it issues (a repeat, whatever the position). The positions do not move. |
+| `resume` | Optional, `true`: after `deliver`, if any, replay the log with the positions and let every processor catch up ([06-processors.md](../06-processors.md#delivery)). |
+| `then.events` | The events the case appended to the log, `{"kind", "data"}`, in order (not the ones in `log`). |
+| `then.positions` | `{processor: seq}`: the positions after. Each one listed MUST equal it. |
+| `then.view` | As the [scenario `view`](../11-scenarios.md#fields). |
+
+The desk's shell, which a processor's side effects reach, is the one the desk's script of ten
+commands uses: the agent says `"On it."` and `"Done."`, a `check` step ends with code 0 and any
+other step with code 1, and cancelling does nothing visible.
+
+The cases show one rule: a processor given the same event again, after a restart or by a late
+copy, adds nothing, because its commands are refused as stale. They also show the restart, a
+position of 0 and a position past the end of the log.
+
 ## Scenarios
 
 [`scenarios/pass.jsonl`](scenarios/pass.jsonl), [`scenarios/fail.jsonl`](scenarios/fail.jsonl) and
@@ -158,5 +183,4 @@ and `now`. No desk command reads `now`, so that scenario shows only that the fie
 ## What is not here
 
 Named in the design notes and not yet written: a log read by
-a second kit, an event with an added field read from an old log (item 13), a processor delivered
-twice (item 8). Their features are not in the M0 spec, so they have no fixture.
+a second kit, an event with an added field read from an old log (item 13). Their features are not in the M0 spec, so they have no fixture.
