@@ -37,12 +37,12 @@ A crash in the middle of an append can leave the last line cut short. A reader:
 
 "The last line" means the last non-empty line, with or without a final `\n`.
 
+A writer that opens an existing log MUST first remove a torn tail (the text after the last `\n`,
+when the log does not end in `\n`), so the next event starts on a fresh line. The Nim file store
+does this in `openFileStore`.
+
 ## Draft notes
 
-- A writer that reopens a log with a torn last line and appends would glue the new event onto the
-  cut-short text, and the glued line is then an error in the middle of the log. The prototype's
-  file store does not truncate the torn tail on open. Before a durable store ships, this spec has
-  to say that opening a log for writing MUST remove a torn tail first.
 - `seq` equal to the previous plus one is not checked by the prototype's reader.
 - The same log form is used by the SQLite store as rows (`seq`, `at`, `kind`, `data` as text);
   the row form is not part of this spec.
