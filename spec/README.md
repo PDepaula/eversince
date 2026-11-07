@@ -14,7 +14,7 @@ would not choose, the document says so under "Draft notes" instead of hiding it.
 | [03-types.md](03-types.md) | 3 | Type names and how they appear as JSON |
 | [04-event-envelope.md](04-event-envelope.md) | 4 | The event envelope and the one-event-per-line log |
 | [05-command-handling.md](05-command-handling.md) | 5 | What happens between a command arriving and the views being current |
-| [06-processors.md](06-processors.md) | 8 | Processor positions, at-least-once delivery, restart |
+| [06-processors.md](06-processors.md) | 6 | Processor positions, at-least-once delivery, restart |
 | [10-model-check.md](10-model-check.md) | 10 | Every error and lint the model check reports, each with a stable code |
 | [11-scenarios.md](11-scenarios.md) | 11 | The scenario fixture format |
 | [12-state-digest.md](12-state-digest.md) | 12 | The state digest: canonical JSON of the views and its 64-bit hash |
