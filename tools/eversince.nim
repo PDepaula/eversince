@@ -31,6 +31,15 @@ proc optionValue(args: seq[string], flag: string): string =
     if a == flag and i + 1 < args.len: return args[i + 1]
     if a.startsWith(flag & "="): return a[flag.len + 1 .. ^1]
 
+proc firstPositional(args: seq[string]): string =
+  var i = 1
+  while i < args.len:
+    let a = args[i]
+    if a in ["--app", "--app-type", "--model"]: i += 2
+    elif a.startsWith("--"): inc i
+    else: return a
+  ""
+
 proc compileErrors(output: string): string =
   ## The part of the compiler's output worth showing: the `Error:` lines and what follows each.
   var keep: seq[string]
@@ -72,9 +81,9 @@ proc withApp(args: seq[string]): int =
     " -o:" & quoteShell(work / ("driver" & ExeExt)) & " " & quoteShell(driver), options = {poStdErrToStdOut})
   if build.exitCode != 0:
     let why = compileErrors(build.output)
-    if args[0] == "check" and "does not match the code" in why:
+    if args[0] == "check" and "does not match the code" in why and args.firstPositional.len > 0:
       # sealModel stopped the build: the app's own model file and its code disagree
-      echo "check: " & args[1 .. ^1].filterIt(not it.startsWith("--"))[0] & " against " & appPath
+      echo "check: " & args.firstPositional & " against " & appPath
       echo "error: the build of " & appPath & " stopped because its model file does not match its code"
       for line in why.splitLines: echo "  " & line.strip(leading = false)
       echo "result: FAIL (build stopped by sealModel)"
