@@ -1,5 +1,5 @@
 ## Tolerant decoding (spec 13), on types of its own: defaults, ignored keys, wrong types, nesting.
-import std/[unittest, strutils, options]
+import std/[unittest, strutils, options, tables]
 import eversince
 
 type
@@ -16,6 +16,7 @@ type
     pick: Option[string]
     small: uint8
     nested: Line
+    tags: Table[string, int]
 
 proc env(data: string, seq = 7'i64): Envelope =
   Envelope(seq: seq, at: 1, kind: "Note", data: parseJson(data))
@@ -72,3 +73,11 @@ suite "tolerant decoding":
   test "a type left to std/json stays strict, with the same error":
     let e = refusal("""{"pick":5}""")
     check e != nil and e.field == "pick" and e.event == "Note"
+
+  test "a table field decodes its stored entries":
+    let n = decodeEvent[Note](env("""{"tags":{"a":1,"b":2}}"""))
+    check n.tags == {"a": 1, "b": 2}.toTable
+
+  test "a wrong-typed table entry fails loudly":
+    let e = refusal("""{"tags":{"a":"one"}}""")
+    check e != nil and e.field == "tags" and e.event == "Note"

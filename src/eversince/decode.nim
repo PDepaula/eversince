@@ -6,9 +6,9 @@
 ##   - a field present with the wrong JSON type fails with a `DecodeError` naming the event, the
 ##     field and the event's position in the log.
 ## Records inside an event, and the elements of a list, are decoded the same way. A type of any
-## other kind (`Option`, `Table`, an enum, ...) is left to `std/json`'s `to`, which stays strict.
+## other kind (a generic type such as `Option`, `Table`, `HashSet`, an enum, ...) is left to `std/json`'s `to`, which stays strict.
 
-import std/[json, options]
+import std/[json, typetraits]
 import ./types
 
 type
@@ -57,7 +57,7 @@ proc fill[T](dst: var T, n: JsonNode, event, path: string, position: int64) =
     if n.kind != JArray: raise wrong(event, path, position, "list", n)
     dst = newSeq[typeof(dst[0])](n.len)
     for i in 0 ..< n.len: fill(dst[i], n[i], event, path & "[" & $i & "]", position)
-  elif T is object and T isnot Option:
+  elif T is object and '[' notin name(T):
     if n.kind != JObject: raise wrong(event, path, position, "object", n)
     for name, field in fieldPairs(dst):
       if n.hasKey(name):
