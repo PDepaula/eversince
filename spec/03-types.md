@@ -25,5 +25,5 @@ Rules:
 
 - The Nim prototype writes Nim's `seq[T]` as `list[T]` in the model line and passes every other
   type through as spelled. It has no `optional[T]` mapping yet (Nim's `Option` is not mapped).
-- Field defaults, and what a decoder does when a stored event lacks a field, belong to the
-  schema-change rules (outline item 13), not written yet.
+- What a decoder does when a stored event lacks a field (it takes the type's default) is
+  [13-tolerant-decoding.md](13-tolerant-decoding.md). A model line has no per-field default.

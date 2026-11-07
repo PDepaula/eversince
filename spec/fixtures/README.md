@@ -11,6 +11,7 @@ language needs only a JSON parser, the kit's model-file parser and the kit's des
 | Model check ([10](../10-model-check.md)) | [`model/check.jsonl`](model/check.jsonl) | [Model check](#model-check) |
 | Event envelope and log ([04](../04-event-envelope.md)) | [`log/cases.jsonl`](log/cases.jsonl) and the `log/*.jsonl` logs it names | [Log](#log) |
 | State digest ([12](../12-state-digest.md)) | [`digest/cases.jsonl`](digest/cases.jsonl) and the `digest` of the log cases | [State digest](#state-digest) |
+| Tolerant decoding ([13](../13-tolerant-decoding.md)) | [`decode/cases.jsonl`](decode/cases.jsonl) and the logs it names, and [`scenarios/`](scenarios/) | [Tolerant decoding](#tolerant-decoding) |
 | Forgetting ([14](../14-forgetting.md)) | [`forget/cases.jsonl`](forget/cases.jsonl) and the logs it names | [Forgetting](#forgetting) |
 | Processors ([06](../06-processors.md)) | [`processors/cases.jsonl`](processors/cases.jsonl) | [Processors](#processors) |
 | Scenarios ([11](../11-scenarios.md)) | [`scenarios/pass.jsonl`](scenarios/pass.jsonl), [`scenarios/fail.jsonl`](scenarios/fail.jsonl) and the 20 desk scenarios [`examples/desk/scenarios.jsonl`](../../examples/desk/scenarios.jsonl) | [Scenarios](#scenarios) |
@@ -164,6 +165,25 @@ The cases show one rule: a processor given the same event again, after a restart
 copy, adds nothing, because its commands are refused as stale. They also show the restart, a
 position of 0 and a position past the end of the log.
 
+## Tolerant decoding
+
+`decode/cases.jsonl`, for the desk app. Each case names a `log` (a file in the log form, read as a
+reader of an existing file reads it) and `then`. The runner replays the log into the desk's views.
+A case with `positions` (`{processor: seq}`, here none) and `resume: true` then lets every
+processor catch up, as in the [processors](#processors) cases.
+
+| `then` field | Meaning |
+|---|---|
+| `events` | The events the case appended to the log, `{"kind", "data"}`, in order. |
+| `view` | As the [scenario `view`](../11-scenarios.md#fields). |
+| `fails` | `{"event": K, "field": F, "position": N}`: replay MUST fail, and the failure MUST name event `K`, field `F` (left out when the data itself is wrong) and position `N`. The wording is the kit's own. |
+
+The logs are old-shaped: `missing-field.jsonl` holds a `StepStarted` stored before `kind` was a
+field, `extra-field.jsonl` events that carry keys the desk does not know, `wrong-type.jsonl` a
+`TurnStarted` whose `turn` is a string, `not-an-object.jsonl` a `TurnEnded` whose data is an array.
+The scenarios of the same rules are in `scenarios/pass.jsonl` and `scenarios/fail.jsonl`
+(a given event that cannot be decoded fails the scenario).
+
 ## Scenarios
 
 [`scenarios/pass.jsonl`](scenarios/pass.jsonl), [`scenarios/fail.jsonl`](scenarios/fail.jsonl) and
@@ -183,4 +203,4 @@ and `now`. No desk command reads `now`, so that scenario shows only that the fie
 ## What is not here
 
 Named in the design notes and not yet written: a log read by
-a second kit, an event with an added field read from an old log (item 13). Their features are not in the M0 spec, so they have no fixture.
+a second kit. Its feature is not in the M0 spec, so it has no fixture.

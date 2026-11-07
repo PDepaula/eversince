@@ -1,0 +1,5 @@
+{"name":"an old event that lacks a field is read, and the field takes its default","log":"missing-field.jsonl","then":{"view":{"Desk":{"stepRunning":true,"stepId":3,"stepKind":"","stepGame":"cat"}}}}
+{"name":"a processor is given an old event that lacks a field, and reads the default","log":"missing-field.jsonl","positions":{},"resume":true,"then":{"events":[{"kind":"StepEnded","data":{"step":3,"code":1}}],"view":{"Desk":{"stepRunning":false,"stepId":3,"lastStepCode":1}}}}
+{"name":"a field the event does not have is ignored","log":"extra-field.jsonl","then":{"view":{"Chat":{"lines":[{"game":"cat","who":"you","text":"hi"}]},"Desk":{"running":[{"game":"cat","turn":1}],"lastTurn":1}}}}
+{"name":"a field of the wrong type is refused, naming the event, the field and the position","log":"wrong-type.jsonl","then":{"fails":{"event":"TurnStarted","field":"turn","position":2}}}
+{"name":"a payload that is not an object is refused, naming the event and the position","log":"not-an-object.jsonl","then":{"fails":{"event":"TurnEnded","position":2}}}
