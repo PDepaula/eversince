@@ -39,6 +39,8 @@ type
     positional: seq[string]
     app, appType, model: string
     strict, help: bool
+    layout: string                  ## pic: "" (the default), "swimlane" or "stories"
+    fields, spacious, reads, html: bool   ## pic: what the swimlane picture shows, and the page
 
   CliError = object of CatchableError
     code: int
@@ -56,7 +58,8 @@ commands:
   catalog <model.em>              the blocks and what each one is, as a list to read (deterministic)
   check <model.em> [--app <app.nim>] [--strict]
                                   the model check; with --app also against the compiled code
-  pic <model.em> [<out.svg>]      the model as an SVG, grouped by screen, one band per slice
+  pic <model.em> [<out.svg>] [--fields] [--spacious] [--reads] [--layout stories] [--html]
+                                  the model as an SVG: a swimlane timeline, every block once
   scenarios <file.jsonl> --app <app.nim> [--model <model.em>] [--strict]
                                   run the scenarios; print pass or fail for each
   size <model.em>                 the size line (counts of each block kind)
@@ -95,12 +98,32 @@ result line.
 Needs `nim` on the PATH when --app is given. The build takes a few seconds.
 
 """ & exitCodesHelp),
-    ("pic", """usage: eversince pic <model.em> [<out.svg>]
+    ("pic", """usage: eversince pic <model.em> [<out>] [--fields] [--spacious] [--reads] [--layout swimlane|stories] [--html]
 
-Draw the model file as an SVG (it needs no code). Slices are grouped under the first screen they pass through,
-one band per slice, three lanes (who acts, requests and answers, facts). A slice longer than
-""" & $maxCols & """ steps continues on a second row. Every box carries its block's line as a tooltip. The SVG has its
-own style, light and dark. Without <out.svg>, or with `-`, the SVG goes to stdout.
+Draw the model file as an SVG (it needs no code). The default is the swimlane timeline: every
+block is drawn once. Lanes, top to bottom: who acts (screens and processors), commands, events,
+views, queries. Time runs left to right: events in the order the slices first mention them, every
+other block near the events it is joined to. The arrows are the edges the blocks declare (a
+command produces an event, an event is consumed by a view or processor, a processor issues a
+command, a screen offers a command, a query is shown on a screen); nothing is added. Slices are
+not drawn; they only set the order. Records are not drawn. Every box carries its block's line as
+a tooltip. The SVG has its own style, light and dark. Without <out>, or with `-`, it goes to stdout.
+
+What is shown (the swimlane layout; the options combine):
+  --fields    each box shows its fields, and a command its refusal codes (names only without it)
+  --spacious  looser spacing and larger text (compact without it)
+  --reads     also the dashed arrows from a view to the commands and queries that read it
+              (left out by default: every command reads the same few views)
+  --layout stories
+              the old picture instead: slices grouped under the first screen they pass through, one
+              band per slice, three lanes (who acts, requests and answers, facts). A slice longer than
+""" & $maxCols & """ steps
+              continues on a second row. A block that is in no slice is not drawn.
+  --html      write one self-contained HTML page instead of an SVG: the swimlane with switches for
+              fields and density, a switch for the dashed arrows, wheel zoom, drag to pan, one-finger
+              pan and two-finger pinch on a phone, fit to the window on load, and a click on a box or a
+              story to light up its arrows. It loads nothing from the network. --fields, --spacious
+              and --reads choose what shows when it opens.
 
 The output depends only on the model file, so a diff of two pictures shows a change in the model.
 
@@ -147,6 +170,12 @@ proc parseOptions(args: seq[string]): Options =
     let a = args[i]
     if a == "--help" or a == "-h": result.help = true
     elif a == "--strict": result.strict = true
+    elif a == "--fields": result.fields = true
+    elif a == "--spacious": result.spacious = true
+    elif a == "--reads": result.reads = true
+    elif a == "--html": result.html = true
+    elif a == "--layout": result.layout = value(a)
+    elif a.startsWith("--layout="): result.layout = a[9 .. ^1]
     elif a == "--app": result.app = value(a)
     elif a == "--app-type": result.appType = value(a)
     elif a == "--model": result.model = value(a)
@@ -313,15 +342,22 @@ proc runSize(o: Options, s: var Sink): int =
   exitOk
 
 proc runPic(o: Options, s: var Sink): int =
-  if o.positional.len notin 1 .. 2: fail(exitUsage, "pic needs a model file and optionally an output file: eversince pic <model.em> [<out.svg>]")
+  if o.positional.len notin 1 .. 2: fail(exitUsage, "pic needs a model file and optionally an output file: eversince pic <model.em> [<out>]")
+  if o.layout notin ["", "swimlane", "stories"]: fail(exitUsage, "unknown layout " & o.layout & "; the layouts are swimlane and stories")
+  let layout = if o.layout == "stories": layoutStories else: layoutSwimlane
+  if layout == layoutStories and (o.fields or o.spacious or o.reads or o.html):
+    fail(exitUsage, "--fields, --spacious, --reads and --html belong to the swimlane layout; drop them or drop --layout stories")
   let m = loadModel(o.positional[0]).model
-  let svg = render(m)
+  let options = SwimOptions(fields: o.fields, spacious: o.spacious, reads: o.reads)
+  let text =
+    if o.html: page(m, options, "Event model: " & o.positional[0].extractFilename.changeFileExt(""))
+    else: render(m, layout, options)
   if o.positional.len == 1 or o.positional[1] == "-":
-    s.outp.add svg
+    s.outp.add text
   else:
-    try: writeFile(o.positional[1], svg)
+    try: writeFile(o.positional[1], text)
     except IOError: fail(exitCannot, "cannot write " & o.positional[1])
-    s.say "wrote " & o.positional[1] & " (" & $svg.len & " bytes) for " & m.counts
+    s.say "wrote " & o.positional[1] & " (" & $text.len & " bytes) for " & m.counts
   exitOk
 
 # ---------------------------------------------------------------------------------- dispatch

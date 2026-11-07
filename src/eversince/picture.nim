@@ -1,6 +1,11 @@
 ## Draws the picture of an event model from its model file alone (no code needed).
 ##
-## Layout, top to bottom:
+## Two layouts. The default is the **swimlane timeline** (`swimlane.nim`): every block drawn once,
+## in lanes (who acts, commands, events, views, queries), time running left to right. The other is
+## the **stories** layout described below, one band per slice; ask for it with `layoutStories`
+## (`--layout stories` on the command line).
+##
+## The stories layout, top to bottom:
 ##   - one **group** per screen (the first screen a slice passes through; slices that touch no
 ##     screen go in a last group, "background work"), in the order the model file first names them;
 ##   - inside a group, one **band** per slice, in file order;
@@ -13,7 +18,8 @@
 ## `<title>` on every box that holds the block's canonical line.
 
 import std/[xmltree, strutils, sequtils]
-import ./model
+import ./[model, picstyle, swimlane]
+export swimlane
 
 const
   maxCols* = 10           ## steps per row; a longer slice wraps onto the next row of its band
@@ -67,24 +73,11 @@ proc titleOf(b: Block, step: string): string =
   if b.name.len == 0: step & " is not in the model file" else: b.canonical
 
 proc styleSheet(dark: bool): string =
-  ## The rules for one colour scheme. Plain colours, no custom properties, so that every SVG
-  ## renderer (not only browsers) draws it.
-  let (bg, ink, dim, rule, lane, edge) =
-    if dark: ("#16191d", "#e6e8eb", "#9aa3ad", "#323840", "#1d2126", "#8d96a1")
-    else: ("#fbfbf9", "#1b1f24", "#5b6470", "#d5d8dc", "#f1f2f0", "#59626d")
-  # kind -> (fill, stroke)
-  let kinds =
-    if dark:
-      [("screen", "#4a3c14", "#d6ad3b"), ("command", "#17324f", "#5ea3ee"), ("event", "#4d2c17", "#f08d4c"),
-       ("view", "#173b25", "#52c07c"), ("query", "#2e2650", "#a08aeb"), ("processor", "#2a2e34", "#8d96a1"),
-       ("missing", "#4b1d1d", "#ef6b6b")]
-    else:
-      [("screen", "#fff4d6", "#c79a1c"), ("command", "#dcebff", "#3b82d6"), ("event", "#ffe3d1", "#d9732b"),
-       ("view", "#dff4e4", "#2f9e57"), ("query", "#e8e0fb", "#7a5ad1"), ("processor", "#e7e9ec", "#6b7480"),
-       ("missing", "#fde0e0", "#c93b3b")]
-  result = ".em-bg{fill:" & bg & "}.em-lane{fill:" & lane & "}.em-lane-name,.em-kind,.em-empty{fill:" & dim & "}" &
-    ".em-group,.em-title,.em-name{fill:" & ink & "}.em-rule{stroke:" & rule & "}.em-edge{stroke:" & edge & "}.em-head{fill:" & edge & "}"
-  for (kind, fill, stroke) in kinds:
+  ## The rules for one colour scheme.
+  let p = palette(dark)
+  result = ".em-bg{fill:" & p.bg & "}.em-lane{fill:" & p.lane & "}.em-lane-name,.em-kind,.em-empty{fill:" & p.dim & "}" &
+    ".em-group,.em-title,.em-name{fill:" & p.ink & "}.em-rule{stroke:" & p.rule & "}.em-edge{stroke:" & p.edge & "}.em-head{fill:" & p.edge & "}"
+  for (kind, fill, stroke) in p.kinds:
     result.add ".em-" & kind & " rect{fill:" & fill & ";stroke:" & stroke & "}"
 
 let style = "<style>\n" &
@@ -94,7 +87,7 @@ let style = "<style>\n" &
   ".em-name{font:600 13px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}.em-missing rect{stroke-dasharray:4 3}\n" &
   styleSheet(false) & "\n@media (prefers-color-scheme:dark){" & styleSheet(true) & "}\n</style>\n"
 
-proc render*(m: Model): string =
+proc renderStories*(m: Model): string =
   # --- measure: one box size for the whole picture, so columns line up from band to band
   var longest = 0
   for s in m.slices:
@@ -210,3 +203,13 @@ proc render*(m: Model): string =
     "<path d=\"M0 0L10 5L0 10z\" class=\"em-head\"/></marker></defs>\n" &
     "<rect class=\"em-bg\" x=\"0\" y=\"0\" width=\"" & $w & "\" height=\"" & $y & "\"/>\n" &
     body & "</svg>\n"
+
+type Layout* = enum
+  layoutSwimlane   ## every block once, in lanes, time left to right (the default)
+  layoutStories    ## one band per slice, grouped by screen
+
+proc render*(m: Model, layout = layoutSwimlane, options = SwimOptions()): string =
+  ## The picture as SVG. `options` (fields, spacious, reads) belong to the swimlane layout.
+  case layout
+  of layoutSwimlane: renderSwimlane(m, options)
+  of layoutStories: renderStories(m)

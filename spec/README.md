@@ -20,6 +20,7 @@ would not choose, the document says so under "Draft notes" instead of hiding it.
 | [12-state-digest.md](12-state-digest.md) | 12 | The state digest: canonical JSON of the views and its 64-bit hash |
 | [13-tolerant-decoding.md](13-tolerant-decoding.md) | 13 | Decoding a stored event: defaults for missing fields, unknown keys ignored, wrong types refused |
 | [14-forgetting.md](14-forgetting.md) | 14 | Streams, the cap, forgetting a stream, the placeholder, what a view may assume |
+| [15-picture.md](15-picture.md) | 15 | The picture of a model: swimlane lanes, time order, arrows, display options |
 
 Not written yet (outline items 6, 7 and 9): views and queries as separate
 chapters, the store contract. The first draft covers only what the
