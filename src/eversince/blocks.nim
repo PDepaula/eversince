@@ -5,7 +5,7 @@
 ## Macros only declare: nothing clever happens inside a body.
 
 import std/[macros, macrocache, json, strutils, sequtils, os, tables]
-import ./[types, model]
+import ./[types, model, decode]
 
 const
   regLines = CacheSeq"eversince.lines"       ## one canonical model line per block
@@ -303,12 +303,12 @@ macro sealModel*(appName: untyped, modelFile: static string): untyped =
       if not found: result.add (p[1], @[p[0]])
   src.add "proc apply*(app: var " & app & ", env: Envelope) =\n  case env.kind\n"
   for (ev, owners) in byEvent(regViewOn):
-    src.add "  of \"" & ev & "\":\n    let e = env.data.to(" & ev & ")\n"
+    src.add "  of \"" & ev & "\":\n    let e = decodeEvent[" & ev & "](env)\n"
     for v in owners: src.add "    evolve(app." & lowerFirst(v) & ", e)\n"
   src.add "  else: discard\n"
   src.add "proc react*(app: " & app & ", env: Envelope, issueCb: IssueProc) =\n  case env.kind\n"
   for (ev, owners) in byEvent(regProcOn):
-    src.add "  of \"" & ev & "\":\n    let e = env.data.to(" & ev & ")\n"
+    src.add "  of \"" & ev & "\":\n    let e = decodeEvent[" & ev & "](env)\n"
     for p in owners: src.add "    react(" & p & ", e, issueCb)\n"
   src.add "  else: discard\n"
   src.add "proc processors*(app: " & app & "): seq[string] = @[" & toSeq(regProcs).mapIt(escape(it.strVal)).join(", ") & "]\n"
@@ -318,7 +318,7 @@ macro sealModel*(appName: untyped, modelFile: static string): untyped =
     for row in regProcOn:
       let r = row.strVal.split(' ')
       if r[0] == p.strVal:
-        src.add "    of \"" & r[1] & "\": react(" & r[0] & ", env.data.to(" & r[1] & "), issueCb)\n"
+        src.add "    of \"" & r[1] & "\": react(" & r[0] & ", decodeEvent[" & r[1] & "](env), issueCb)\n"
     src.add "    else: discard\n"
   src.add "  else: discard\n"
   proc viewArgs(row: string): string =

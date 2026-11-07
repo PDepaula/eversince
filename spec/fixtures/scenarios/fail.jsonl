@@ -12,3 +12,4 @@
 {"name":"a view is expected to hold a field it does not have","given":[],"then":{"view":{"Desk":{"noSuchField":0}}}}
 {"name":"a view is expected to hold the events of a refused command","given":[],"when":{"command":"SendMessage","data":{"game":"cat","text":"  "}},"then":{"refused":"badMessage","view":{"Chat":{"lines":[{"game":"cat","who":"you","text":""}]}}}}
 {"name":"a given event is folded before the command is decided","given":[{"kind":"AgentPicked","data":{"game":"cat","agent":"codex"}}],"when":{"command":"SendMessage","data":{"game":"cat","text":"hi"}},"then":{"events":[{"kind":"MessageSent","data":{"game":"cat","text":"hi"}},{"kind":"TurnStarted","data":{"game":"cat","turn":1,"agent":"claude"}}]}}
+{"name":"a given event whose field has the wrong type cannot be folded","given":[{"kind":"TurnStarted","data":{"game":"cat","turn":"one","agent":"claude"}}],"then":{}}

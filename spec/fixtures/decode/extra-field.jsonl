@@ -1,0 +1,2 @@
+{"seq":1,"at":1700000001000,"kind":"MessageSent","data":{"game":"cat","text":"hi","mood":"happy","tags":["a","b"]}}
+{"seq":2,"at":1700000001000,"kind":"TurnStarted","data":{"game":"cat","turn":1,"agent":"claude","effort":"high"}}

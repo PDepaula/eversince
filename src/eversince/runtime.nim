@@ -1,7 +1,7 @@
 ## The runtime: the one way a command is handled, replay, and the scenario runner.
 
 import std/[json, sequtils]
-import ./[types, store, positions]
+import ./[types, decode, store, positions]
 
 type Runtime*[A] = object
   app*: A
@@ -107,7 +107,8 @@ proc runScenario*[A](sc: JsonNode): string =
   var seq = 0'i64
   for g in sc{"given"}.getElems:
     inc seq
-    apply(app, Envelope(seq: seq, kind: g["kind"].getStr, data: g["data"]))
+    try: apply(app, Envelope(seq: seq, kind: g["kind"].getStr, data: g["data"]))
+    except DecodeError as e: return "a given event cannot be decoded: " & e.msg
   let then = sc["then"]
   if sc.hasKey("when"):
     let d = decide(app, sc["when"]["command"].getStr, sc["when"]["data"], Ctx(now: sc{"now"}.getBiggestInt, nextSeq: seq + 1))

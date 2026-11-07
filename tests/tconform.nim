@@ -231,6 +231,49 @@ suite "fixtures: processors":
           let got = all{lowerFirst(name)}
           for key, val in want: check got{key} == val
 
+# -- tolerant decoding -------------------------------------------------------------------------
+
+suite "fixtures: tolerant decoding":
+  let dir = root / "decode"
+  for c in jsonLines(dir / "cases.jsonl"):
+    test c["name"].getStr:
+      runAgent = proc (game, text: string): seq[string] = @["On it.", "Done."]
+      runStep = proc (game, kind: string): int = (if kind == "check": 0 else: 1)
+      cancelAgent = proc (turn: int) = discard
+      let store = MemStore()
+      store.append readLog(dir / c["log"].getStr)
+      let given = store.load.len
+      let then = c["then"]
+      if then.hasKey("fails"):
+        let want = then["fails"]
+        var msg = ""
+        var err: ref DecodeError
+        try: discard replay[DeskApp](store)
+        except DecodeError as e: (err = e; msg = e.msg)
+        check msg.len > 0
+        check err != nil
+        if err != nil:
+          check err.event == want["event"].getStr
+          check err.field == want{"field"}.getStr
+          check err.position == want["position"].getBiggestInt
+        # the message names all three
+        check want["event"].getStr in msg
+        if want.hasKey("field"): check want["field"].getStr in msg
+        check $want["position"].getBiggestInt in msg
+      else:
+        let positions = if c.hasKey("positions"): MemPositions() else: nil
+        if c.hasKey("positions"):
+          for name, pos in c["positions"]: positions.save [(name, pos.getBiggestInt)]
+        var rt = replay[DeskApp](store, positions)
+        rt.clock = proc (): int64 = 1_700_000_100_000'i64
+        if c{"resume"}.getBool: rt.catchUp()
+        if then.hasKey("events"): check store.load[given .. ^1].map(envKind) == then["events"].getElems
+        if then.hasKey("view"):
+          let all = %rt.app
+          for name, want in then["view"]:
+            let got = all{lowerFirst(name)}
+            for key, val in want: check got{key} == val
+
 # -- scenarios ---------------------------------------------------------------------------------
 
 proc scenarioNames(file: string): seq[string] = jsonLines(file).mapIt(it["name"].getStr)
