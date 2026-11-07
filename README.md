@@ -94,6 +94,7 @@ nimble tool      # builds bin/eversince (commands: size, pic)
 | `examples/tally/` | the README example |
 | `examples/desk/` | the Para Studio desk: 8 commands, 9 events, 2 views, 20 scenarios, and the evidence run |
 | `tests/` | the test suite |
+| `docs/m0-evidence.md` | the commands and results that show the prototype carried over |
 
 ## Licence
 
