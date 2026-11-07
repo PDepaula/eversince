@@ -6,10 +6,10 @@
 ##
 ## The compile is `nim check`: every one of these checks runs during semantic analysis, so
 ## nothing needs the C compiler and each build takes about half a second. Every compile has a
-## time limit, so a hung compiler fails the test instead of stalling CI. Nothing here uses a shell:
-## the compiler is the one running this test (`getCurrentCompilerExe`), the work happens in a
-## temp directory, and the repository is never written to.
-import std/[unittest, os, osproc, strutils, streams, atomics, sequtils]
+## time limit, so a hung compiler fails the test instead of stalling CI. The compiler is the one
+## running this test (`getCurrentCompilerExe`), the work happens in a temp directory, and the
+## repository is never written to.
+import std/[unittest, os, osproc, strutils, atomics, sequtils]
 
 const
   nimExe = getCurrentCompilerExe()
@@ -23,12 +23,24 @@ type Outcome = object
   timedOut: bool
   text: string    ## everything it printed
 
+let work = getTempDir() / ("eversince-tneg-" & $getCurrentProcessId())
+createDir work
+var caseNo = 0
+
 proc compilerPath(): string =
   if nimExe.len > 0 and fileExists(nimExe): nimExe else: findExe("nim")
 
 proc runWithLimit(args: seq[string]): Outcome =
   ## Run the compiler, capture stdout and stderr together, kill it after `timeLimitMs`.
-  let p = startProcess(compilerPath(), args = args, options = {poStdErrToStdOut, poUsePath})
+  ## The output goes to a file, not a pipe: on Windows a zero-length write by the compiler reads
+  ## as end-of-stream and cut the captured text short. `cmd /c` drops the outermost quotes of its
+  ## command line, so on Windows the whole line gets one more pair.
+  let outFile = work / ("out-" & $caseNo & ".txt")
+  var line = quoteShell(compilerPath())
+  for a in args: line.add " " & quoteShell(a)
+  line.add " > " & quoteShell(outFile) & " 2>&1"
+  when defined(windows): line = "\"" & line & "\""
+  let p = startProcess(line, options = {poEvalCommand, poUsePath})
   var finished: Atomic[bool]
   var expired: Atomic[bool]
   var watchdog: Thread[(pointer, ptr Atomic[bool], ptr Atomic[bool])]
@@ -41,11 +53,11 @@ proc runWithLimit(args: seq[string]): Outcome =
       a[2][].store true
       cast[Process](a[0]).kill()
   createThread(watchdog, watch, (cast[pointer](p), addr finished, addr expired))
-  result.text = p.outputStream.readAll()   # ends when the compiler exits or is killed
-  let code = p.waitForExit()
+  let code = p.waitForExit()   # returns when the compiler exits or is killed
   finished.store true
   joinThread watchdog
   p.close()
+  result.text = if fileExists(outFile): readFile(outFile) else: ""
   result.timedOut = expired.load
   result.ok = code == 0 and not result.timedOut
 
@@ -61,10 +73,6 @@ proc editLine(text, startsWith: string, change: proc (line: string): string): st
   let fresh = change(lines[i])
   if fresh.len == 0: lines.delete i else: lines[i] = fresh
   lines.join("\n")
-
-let work = getTempDir() / ("eversince-tneg-" & $getCurrentProcessId())
-createDir work
-var caseNo = 0
 
 proc build(flags: seq[string] = @[], editModel: proc (text: string): string = nil): Outcome =
   ## Copy the desk example into a fresh directory, apply the edit to `desk.em`, compile it.
