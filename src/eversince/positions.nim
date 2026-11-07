@@ -32,10 +32,16 @@ proc openFilePositions*(path: string, sync = false): FilePositions =
   ## would repeat their side effects, which is not for the kit to decide.
   result = FilePositions(path: path, sync: sync)
   if fileExists(path):
+    let bad = "positions file " & path & " is not a JSON object of numbers"
+    var root: JsonNode
     try:
-      for name, pos in parseFile(path): result.at[name] = pos.getBiggestInt
+      root = parseFile(path)
     except CatchableError as e:
-      raise newException(IOError, "positions file " & path & " is not a JSON object of numbers: " & e.msg)
+      raise newException(IOError, bad & ": " & e.msg)
+    if root.kind != JObject: raise newException(IOError, bad)
+    for name, pos in root:
+      if pos.kind != JInt: raise newException(IOError, bad & ": " & name)
+      result.at[name] = pos.getBiggestInt
 
 method get*(p: FilePositions, processor: string): int64 = p.at.getOrDefault(processor)
 

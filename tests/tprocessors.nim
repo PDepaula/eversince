@@ -153,3 +153,9 @@ suite "processor positions":
     let pos = work / "bad.positions"
     writeFile(pos, "{\"TurnRunner\":")
     expect IOError: discard openFilePositions(pos)
+
+  test "a positions file that is not an object of numbers raises":
+    let pos = work / "shape.positions"
+    for text in ["[1]", "{\"TurnRunner\":\"x\"}", "{\"TurnRunner\":1.5}", "3"]:
+      writeFile(pos, text)
+      expect IOError: discard openFilePositions(pos)
