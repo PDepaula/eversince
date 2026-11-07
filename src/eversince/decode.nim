@@ -6,7 +6,8 @@
 ##   - a field present with the wrong JSON type fails with a `DecodeError` naming the event, the
 ##     field and the event's position in the log.
 ## Records inside an event, and the elements of a list, are decoded the same way. A type of any
-## other kind (a generic type such as `Option`, `Table`, `HashSet`, an enum, ...) is left to `std/json`'s `to`, which stays strict.
+## other kind (a generic type such as `Option`, `Table`, `HashSet`, an enum, ...) is left to
+## `std/json`'s `to`, which stays strict.
 
 import std/[json, typetraits]
 import ./types
