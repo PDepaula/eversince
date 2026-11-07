@@ -1,0 +1,4 @@
+{"kind":"MessageSent","data":{"text":"make the cat jump higher","game":"cat"},"at":1700000001000,"seq":1}
+
+  { "seq" : 2 , "at" : 1700000001000 , "kind" : "TurnStarted" , "data" : { "game" : "cat" , "turn" : 1 , "agent" : "claude" } }
+{"data":{"game":"cat","turn":1,"text":"On it."},"kind":"Said","seq":3,"at":1700000001000}
