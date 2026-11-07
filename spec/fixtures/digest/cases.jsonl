@@ -1,0 +1,17 @@
+{"name":"the hash of the empty text is the offset basis","text":"","digest":"cbf29ce484222325"}
+{"name":"the hash of a","text":"a","digest":"af63dc4c8601ec8c"}
+{"name":"the hash of foobar","text":"foobar","digest":"85944171f73967e8"}
+{"name":"the hash is over UTF-8 bytes","text":"é€😀","digest":"0a289ca40199fa06"}
+{"name":"an empty object","value":{},"canonical":"{}","digest":"08f44b07b5901a25"}
+{"name":"an empty array","value":[],"canonical":"[]","digest":"09612b07b5ecb5a5"}
+{"name":"keys are sorted at every depth","value":{"b":{"y":1,"x":2},"a":{"d":[],"c":{}}},"canonical":"{\"a\":{\"c\":{},\"d\":[]},\"b\":{\"x\":2,\"y\":1}}","digest":"10345f8e5e18efb3"}
+{"name":"array order is kept","value":[3,1,[2,[1]],{"b":0,"a":0}],"canonical":"[3,1,[2,[1]],{\"a\":0,\"b\":0}]","digest":"e7dff6961a175c49"}
+{"name":"keys sort by code point, not by UTF-16 unit","value":{"😀":1,"Ａ":2,"z":3,"Z":4,"é":5},"canonical":"{\"Z\":4,\"z\":3,\"é\":5,\"Ａ\":2,\"😀\":1}","digest":"32d6bb66fbbaf167"}
+{"name":"an empty key sorts first","value":{"a":1,"":2},"canonical":"{\"\":2,\"a\":1}","digest":"d68b3ba1c3276db9"}
+{"name":"quote, backslash and control characters are escaped, the rest is written as it is","value":"a\"b\\c\n\t\r\b\f\u0001\u001f/é€😀","canonical":"\"a\\\"b\\\\c\\n\\t\\r\\b\\f\\u0001\\u001f/é€😀\"","digest":"3440ec8b2f20e206"}
+{"name":"null and booleans","value":[null,true,false],"canonical":"[null,true,false]","digest":"4e4bb39428884f05"}
+{"name":"integers","value":[0,-1,42,9007199254740993],"canonical":"[0,-1,42,9007199254740993]","digest":"6697abff82be25c1"}
+{"name":"a float with no fraction is written as an integer","value":[1.0,-2.0,100.0,100.0],"canonical":"[1,-2,100,100]","digest":"1862ee99789c121b"}
+{"name":"minus zero is zero","value":[-0.0,0.0],"canonical":"[0,0]","digest":"f9cec3247ab9641d"}
+{"name":"floats are the shortest digits that read back the same","value":[1.5,0.1,0.30000000000000004,4.35,123456.789],"canonical":"[1.5,0.1,0.30000000000000004,4.35,123456.789]","digest":"fa3bc1a3a46fd926"}
+{"name":"small and large floats switch to the exponent form outside 1e-6 and 1e21","value":[1e-06,1e-07,1.5e-07,5e-324,1e+20,1e+21,1.5e+300,1.7976931348623157e+308],"canonical":"[0.000001,1e-7,1.5e-7,5e-324,100000000000000000000,1e+21,1.5e+300,1.7976931348623157e+308]","digest":"dbdc24ef9980dc7a"}

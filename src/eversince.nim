@@ -8,5 +8,5 @@
 ##   `eversince/picture`       the model file as an SVG
 ##   `eversince/store_sqlite`  the SQLite store (needs the system's SQLite library)
 
-import eversince/[types, model, blocks, store, store_file, runtime]
-export types, model, blocks, store, store_file, runtime
+import eversince/[types, model, blocks, store, store_file, runtime, digest]
+export types, model, blocks, store, store_file, runtime, digest

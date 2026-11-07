@@ -1,12 +1,12 @@
 ## The SQLite store replays to the same state as the memory store. Needs the system's SQLite
 ## library, so it is not part of the Windows run.
-import std/[unittest, os, hashes, strutils]
+import std/[unittest, os, strutils]
 import eversince, eversince/store_sqlite
 import ../examples/desk/desk
 
 let work = getTempDir() / "eversince-tsqlite"
 
-proc stateHash(app: DeskApp): string = toHex(hash($(%app)).int, 16)
+proc stateHash(app: DeskApp): string = stateDigest(app)
 
 proc script(rt: var Runtime[DeskApp]) =
   var tick = 1_700_000_000_000'i64

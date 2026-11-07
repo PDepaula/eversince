@@ -67,6 +67,22 @@ discard rt.execute("Count", %*{"by": 3})          # refused == false
 echo rt.app.answer("CurrentTotal", %*{})          # 3
 ```
 
+## A log that forgets, and the state digest
+
+The file store can forget, for an app that must delete a conversation or keep secrets out of its
+log (`spec/14-forgetting.md`). A stream is whatever the app says it is:
+
+```nim
+let store = openFileStore("chat.jsonl",
+  clean = proc (e: Envelope): Envelope = redact(e),               # runs on every event written
+  streamOf = proc (e: Envelope): string = e.data{"chat"}.getStr,  # what is forgotten together
+  maxStreamBytes = 512 * 1024)                                    # oldest events of a chat go first
+store.forget("chat-7")                                            # that chat is gone from the file
+```
+
+`stateDigest(app)` is a 16-digit hash of the views (`spec/12-state-digest.md`), the same for any
+store and, later, any kit that folded the same events.
+
 ## The command line
 
 `nimble tool` builds `bin/eversince`. Every command has `--help`; none needs the app's code
@@ -128,7 +144,7 @@ than 10 steps continues on a second row; the SVG carries its own colours (light 
 Needs Nim 2.2 or newer.
 
 ```
-nimble test      # model, desk, tally, picture, conformance, must-fail build, command line and SQLite tests (no SQLite on Windows)
+nimble test      # model, desk, tally, picture, conformance, state digest, forgetting, must-fail build, command line and SQLite tests (no SQLite on Windows)
 nimble demo      # the desk example's evidence run: scenarios, replay across stores, timings
 nimble tool      # builds bin/eversince (catalog, check, pic, scenarios, size)
 ```
@@ -138,7 +154,7 @@ nimble tool      # builds bin/eversince (catalog, check, pic, scenarios, size)
 | Path | What |
 |---|---|
 | `src/eversince.nim` | the public import |
-| `src/eversince/` | `blocks` (macros, `sealModel`), `model` (model-file parser and checker), `runtime`, `store`, `store_file`, `store_sqlite`, `picture`, `catalog`, `cli`, `types` |
+| `src/eversince/` | `blocks` (macros, `sealModel`), `model` (model-file parser and checker), `runtime`, `store`, `store_file`, `store_sqlite`, `digest`, `picture`, `catalog`, `cli`, `types` |
 | `tools/eversince.nim` | command line: `catalog`, `check`, `pic`, `scenarios`, `size` |
 | `spec/` | the language-neutral spec, first draft, and its fixtures |
 | `examples/tally/` | the README example |

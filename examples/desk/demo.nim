@@ -4,7 +4,7 @@
 ##
 ## The SQLite store needs the system's SQLite library; build with -d:eversinceNoSqlite to leave it
 ## out (the SQLite rows are then skipped).
-import std/[os, strutils, times, hashes, monotimes]
+import std/[os, strutils, times, monotimes]
 import eversince, eversince/store_file
 import desk
 when not defined(eversinceNoSqlite):
@@ -21,7 +21,7 @@ proc openSql(path: string, sync = false): Store =
   when defined(eversinceNoSqlite): raise newException(IOError, "built without SQLite")
   else: openSqliteStore(path, sync)
 
-proc stateHash(app: DeskApp): string = toHex(hash($(%app)).int, 16)
+proc stateHash(app: DeskApp): string = stateDigest(app)
 
 proc section(title: string) = echo "\n== " & title
 

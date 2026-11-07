@@ -1,0 +1,8 @@
+{"seq":7,"at":1700000002000,"kind":"StepEnded","data":{"step":1,"code":0}}
+{"seq":9,"at":1700000004000,"kind":"StepEnded","data":{"step":2,"code":1}}
+{"seq":11,"at":1700000008000,"kind":"MessageSent","data":{"game":"dog","text":"add a bark"}}
+{"seq":12,"at":1700000008000,"kind":"TurnStarted","data":{"game":"dog","turn":2,"agent":"claude"}}
+{"seq":13,"at":1700000008000,"kind":"Said","data":{"game":"dog","turn":2,"text":"On it."}}
+{"seq":14,"at":1700000008000,"kind":"Said","data":{"game":"dog","turn":2,"text":"Done."}}
+{"seq":15,"at":1700000008000,"kind":"TurnEnded","data":{"game":"dog","turn":2,"outcome":"ok"}}
+{"seq":16,"at":1700000009000,"kind":"ConversationCleared","data":{"game":"dog"}}

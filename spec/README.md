@@ -16,10 +16,12 @@ would not choose, the document says so under "Draft notes" instead of hiding it.
 | [05-command-handling.md](05-command-handling.md) | 5 | What happens between a command arriving and the views being current |
 | [10-model-check.md](10-model-check.md) | 10 | Every error and lint the model check reports, each with a stable code |
 | [11-scenarios.md](11-scenarios.md) | 11 | The scenario fixture format |
+| [12-state-digest.md](12-state-digest.md) | 12 | The state digest: canonical JSON of the views and its 64-bit hash |
+| [14-forgetting.md](14-forgetting.md) | 14 | Streams, the cap, forgetting a stream, the placeholder, what a view may assume |
 
-Not written yet (outline items 6 to 9 and 12 to 14): views, queries and processors as separate
-chapters, the store contract, the state digest, changing an event's shape, forgetting. The first
-draft covers only what the prototype exercises. Their intended direction is recorded in the
+Not written yet (outline items 6 to 9 and 13): views, queries and processors as separate
+chapters, the store contract, changing an event's shape. The first draft covers only what the
+prototype exercises. Their intended direction is recorded in the
 project's design notes, not here.
 
 Words used in these files: **MUST** and **MUST NOT** mark what a conforming kit has to do;

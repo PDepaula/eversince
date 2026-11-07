@@ -6,7 +6,7 @@ Every stored event is an envelope of four fields:
 
 | Field | Type | Meaning |
 |---|---|---|
-| `seq` | `int` | Position in the log, starting at 1, no gaps. Stamped by the shell when the event is appended. |
+| `seq` | `int` | Position in the log, starting at 1, no gaps (except where [forgetting](14-forgetting.md) removed events). Stamped by the shell when the event is appended. |
 | `at` | `int` | Milliseconds since the epoch. Stamped by the shell when the event is appended: the same value for every event of one command. |
 | `kind` | `string` | The event block's name. |
 | `data` | object | The event's fields, as JSON (see [03-types.md](03-types.md)). |
@@ -40,6 +40,12 @@ A crash in the middle of an append can leave the last line cut short. A reader:
 A writer that opens an existing log MUST first remove a torn tail (the text after the last `\n`,
 when the log does not end in `\n`), so the next event starts on a fresh line. The Nim file store
 does this in `openFileStore`.
+
+## Forgetting
+
+A log can forget a stream of events, and then holds gaps in `seq` and may hold one placeholder
+event of the kind `eversince.forgotten`. A reader reads such a log as any other:
+[14-forgetting.md](14-forgetting.md).
 
 ## Draft notes
 

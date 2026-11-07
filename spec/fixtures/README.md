@@ -10,6 +10,8 @@ language needs only a JSON parser, the kit's model-file parser and the kit's des
 | Model file ([02](../02-model-file.md)) | [`model/parse.jsonl`](model/parse.jsonl) and the desk model [`examples/desk/desk.em`](../../examples/desk/desk.em) | [Parsing](#model-parsing) |
 | Model check ([10](../10-model-check.md)) | [`model/check.jsonl`](model/check.jsonl) | [Model check](#model-check) |
 | Event envelope and log ([04](../04-event-envelope.md)) | [`log/cases.jsonl`](log/cases.jsonl) and the `log/*.jsonl` logs it names | [Log](#log) |
+| State digest ([12](../12-state-digest.md)) | [`digest/cases.jsonl`](digest/cases.jsonl) and the `digest` of the log cases | [State digest](#state-digest) |
+| Forgetting ([14](../14-forgetting.md)) | [`forget/cases.jsonl`](forget/cases.jsonl) and the logs it names | [Forgetting](#forgetting) |
 | Scenarios ([11](../11-scenarios.md)) | [`scenarios/pass.jsonl`](scenarios/pass.jsonl), [`scenarios/fail.jsonl`](scenarios/fail.jsonl) and the 20 desk scenarios [`examples/desk/scenarios.jsonl`](../../examples/desk/scenarios.jsonl) | [Scenarios](#scenarios) |
 
 ## Conventions
@@ -86,6 +88,7 @@ have no fixture here: they are tested in each kit in the way its language allows
 | `last` | The last event found. |
 | `sameAs` | The events found are those of the other log named here. |
 | `canonical` | `true`: every line of the file is in the form a writer writes, so a writer given the events found writes the lines back byte for byte. |
+| `digest` | Needs `"app": "desk"` in the case. The [state digest](../12-state-digest.md) of the desk's views after folding the events found. |
 | `view` | Needs `"app": "desk"` in the case. Fold the events found, in order, into the views of the desk app (its initial state first); each listed field of each listed view MUST equal the value ([scenario `view`](../11-scenarios.md#fields)). |
 | `fails` | `{"concerns": {"line": N}}`: reading MUST fail, because line `N` is an incomplete envelope that is not the last line. A reader that cannot say which line is wrong is not required to. |
 
@@ -109,6 +112,33 @@ Logs:
 | `torn-only.jsonl` | One cut-short line and nothing else. |
 | `torn-middle.jsonl` | An incomplete line as the 6th of 16 lines. |
 
+## State digest
+
+`digest/cases.jsonl`. Each case has a `name` and `digest`, and one of:
+
+- `text`: a string. The digest is the 64-bit FNV-1a hash of its UTF-8 bytes
+  ([12](../12-state-digest.md#the-hash)).
+- `value`: a JSON value and `canonical`, the string it is written as
+  ([12](../12-state-digest.md#canonical-json)). A runner MUST write `value` as exactly `canonical`
+  and the digest of that text as `digest`. `value` is compared as parsed, so `1e2` and `100.0`
+  are the same value.
+
+## Forgetting
+
+`forget/cases.jsonl`. Each case opens a copy of the log named by `log`, as a writer, with a
+store that forgets, does the `steps` in order, closes it, and the file MUST then hold exactly the
+bytes of the file named by `then.file`:
+
+| Field | Meaning |
+|---|---|
+| `log` | The log to start from. |
+| `stream` | How an event names its stream: `{"field": "game"}` is the string `data.game`; an event without one has no stream ([14](../14-forgetting.md#streams)). |
+| `cap` | Optional, `{"bytes": N}`: the store is opened with this cap ([14](../14-forgetting.md#the-operations)). |
+| `steps` | Optional list, each `{"forget": "stream"}` (or a list of streams, forgotten one after the other) or `{"append": envelope}`. |
+| `then.file` | The log that must result. |
+
+A case with no `steps` shows what opening the log does (the cap, a torn tail).
+
 ## Scenarios
 
 [`scenarios/pass.jsonl`](scenarios/pass.jsonl), [`scenarios/fail.jsonl`](scenarios/fail.jsonl) and
@@ -127,6 +157,6 @@ and `now`. No desk command reads `now`, so that scenario shows only that the fie
 
 ## What is not here
 
-Named in the design notes and not yet written: a state digest (outline item 12), a log read by
+Named in the design notes and not yet written: a log read by
 a second kit, an event with an added field read from an old log (item 13), a processor delivered
 twice (item 8). Their features are not in the M0 spec, so they have no fixture.

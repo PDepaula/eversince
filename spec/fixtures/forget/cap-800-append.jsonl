@@ -1,0 +1,14 @@
+{"seq":4,"at":1700000001000,"kind":"Said","data":{"game":"cat","turn":1,"text":"Done."}}
+{"seq":5,"at":1700000001000,"kind":"TurnEnded","data":{"game":"cat","turn":1,"outcome":"ok"}}
+{"seq":6,"at":1700000002000,"kind":"StepStarted","data":{"game":"cat","step":1,"kind":"check"}}
+{"seq":7,"at":1700000002000,"kind":"StepEnded","data":{"step":1,"code":0}}
+{"seq":8,"at":1700000004000,"kind":"StepStarted","data":{"game":"cat","step":2,"kind":"save"}}
+{"seq":9,"at":1700000004000,"kind":"StepEnded","data":{"step":2,"code":1}}
+{"seq":10,"at":1700000005000,"kind":"AgentPicked","data":{"game":"cat","agent":"codex"}}
+{"seq":11,"at":1700000008000,"kind":"MessageSent","data":{"game":"dog","text":"add a bark"}}
+{"seq":12,"at":1700000008000,"kind":"TurnStarted","data":{"game":"dog","turn":2,"agent":"claude"}}
+{"seq":13,"at":1700000008000,"kind":"Said","data":{"game":"dog","turn":2,"text":"On it."}}
+{"seq":14,"at":1700000008000,"kind":"Said","data":{"game":"dog","turn":2,"text":"Done."}}
+{"seq":15,"at":1700000008000,"kind":"TurnEnded","data":{"game":"dog","turn":2,"outcome":"ok"}}
+{"seq":16,"at":1700000009000,"kind":"ConversationCleared","data":{"game":"dog"}}
+{"seq":17,"at":1700000010000,"kind":"MessageSent","data":{"game":"cat","text":"make the cat jump even higher"}}

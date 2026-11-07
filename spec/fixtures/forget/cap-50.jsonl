@@ -1,0 +1,4 @@
+{"seq":7,"at":1700000002000,"kind":"StepEnded","data":{"step":1,"code":0}}
+{"seq":9,"at":1700000004000,"kind":"StepEnded","data":{"step":2,"code":1}}
+{"seq":10,"at":1700000005000,"kind":"AgentPicked","data":{"game":"cat","agent":"codex"}}
+{"seq":16,"at":1700000009000,"kind":"ConversationCleared","data":{"game":"dog"}}
