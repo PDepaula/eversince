@@ -78,7 +78,7 @@ echo rt.app.answer("CurrentTotal", %*{})          # 3
 Needs Nim 2.2 or newer.
 
 ```
-nimble test      # model, desk, tally, picture and SQLite tests (no SQLite on Windows)
+nimble test      # model, desk, tally, picture, conformance and SQLite tests (no SQLite on Windows)
 nimble demo      # the desk example's evidence run: scenarios, replay across stores, timings
 nimble tool      # builds bin/eversince (commands: size, pic)
 ```

@@ -77,5 +77,7 @@ and one that checks events and a view:
   gives that state. The prototype runner supports it; no desk scenario uses it.
 - The prototype runner returns an empty string for a pass and the reason for a failure. The
   reason text is not part of the spec.
-- Fixtures for a replayed log, a torn tail, models that must fail and processors delivered twice
-  are named in the design notes (fixtures 3 to 8) and are not written yet.
+- Passing and failing scenarios for the format itself are in
+  [`spec/fixtures/scenarios/`](fixtures/scenarios/); how a runner uses them is in
+  [`spec/fixtures/README.md`](fixtures/README.md). A fixture for processors delivered twice is
+  named in the design notes and is not written yet.

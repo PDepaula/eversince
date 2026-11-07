@@ -30,11 +30,13 @@ method append*(s: FileStore, evs: openArray[Envelope]) =
 method load*(s: FileStore): seq[Envelope] =
   ## A last line cut short by a crash is not an event: it is skipped.
   let lines = readFile(s.path).split('\n')
+  var last = lines.high ## the last non-empty line: only that one may be torn
+  while last > 0 and lines[last].strip.len == 0: dec last
   for i, line in lines:
-    if line.len == 0: continue
+    if line.strip.len == 0: continue
     try: result.add fromLine(line)
     except CatchableError:
-      if i >= lines.len - 2: break
+      if i == last: break
       raise
 
 method close*(s: FileStore) = s.f.close
