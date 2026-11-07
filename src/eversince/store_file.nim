@@ -121,17 +121,19 @@ proc cleaned(s: FileStore, e: Envelope): Envelope =
 
 method append*(s: FileStore, evs: openArray[Envelope]) =
   var buf = ""
-  var over = false
+  var added = initTable[string, int]()
   for e in evs:
     let c = s.cleaned(e)
     let line = c.toLine & "\n"
     buf.add line
     if s.maxStreamBytes > 0:
       let st = streamOfEvent(s.streamOf, c)
-      if st.len > 0:
-        s.sizes[st] = s.sizes.getOrDefault(st) + line.len
-        if s.sizes[st] > s.maxStreamBytes: over = true
+      if st.len > 0: added[st] = added.getOrDefault(st) + line.len
   s.f.write buf
+  var over = false
+  for st, n in added:
+    s.sizes[st] = s.sizes.getOrDefault(st) + n
+    if s.sizes[st] > s.maxStreamBytes: over = true
   s.f.flushFile
   when not defined(windows):
     if s.sync: discard fsync(s.f.getFileHandle)
