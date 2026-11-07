@@ -76,7 +76,9 @@ a kit without a compiler. Each MUST stop the build or the start-up.
   immutable, not 'var'`), not as messages the kit writes.
 - `EC009` is true of the prototype by construction (`refuse` accepts only the generated enum of
   the command's codes) and surfaces as a Nim type error.
-- Two of the prototype's compile errors have no file name or line in the user's code
-  (`EC001`, `EC002`); fixing that is M1.
+- Every message points at the user's own line (`tests/terrors.nim` asserts it): a declaration
+  error on the offending line, a model-versus-code error on the `sealModel` line, with the
+  model line (`desk.em:21`) and the code line (`desk.nim:114`) inside the message. `EC001` and
+  `EC002` used to report a position inside generated text; they now report the `emit` or `issue`.
 - The strict switch is `-d:eversinceStrict` in the Nim kit. Its name in other kits is theirs to
   choose; the spec only requires that lints can be made errors.
