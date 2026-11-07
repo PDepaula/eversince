@@ -8,7 +8,7 @@ srcDir        = "src"
 # Dependencies
 requires "nim >= 2.2.0"
 
-task test, "Run the tests (SQLite store included unless -d:eversinceNoSqlite or on Windows)":
+task test, "Run the tests (the SQLite store test is skipped on Windows)":
   var tests = @["tmodel", "tdesk", "ttally", "tpicture"]
   when not defined(windows):
     tests.add "tsqlite"

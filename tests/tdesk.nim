@@ -85,3 +85,22 @@ suite "replay":
     let again = replay[DeskApp](openFileStore(path))
     check again.seq == 16
     check stateHash(again.app) == live
+
+  test "appending after a half-written last line keeps the log replayable":
+    let path = work / "desk.jsonl"
+    var rt = Runtime[DeskApp](store: openFileStore(path))
+    script(rt)
+    rt.store.close()
+    let f = open(path, fmAppend)
+    f.write "{\"seq\":99,\"at\":1,\"kind\":\"Sai"
+    f.close
+    var next = replay[DeskApp](openFileStore(path))
+    next.clock = proc (): int64 = 1_800_000_000_000'i64
+    discard next.execute("SendMessage", %*{"game": "fox", "text": "add a fox"})
+    check next.seq > 16
+    let live = stateHash(next.app)
+    let total = next.seq
+    next.store.close()
+    let again = replay[DeskApp](openFileStore(path))
+    check again.seq == total
+    check stateHash(again.app) == live

@@ -8,3 +8,12 @@ nimcache/
 .claude/
 .vscode/
 .idea/
+
+# compiled programs built beside their sources (no extension)
+examples/**/*
+!examples/**/
+!examples/**/*.*
+tests/*
+!tests/*.*
+tools/*
+!tools/*.*

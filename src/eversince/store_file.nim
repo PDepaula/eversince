@@ -1,6 +1,6 @@
 ## Append-only JSON-lines store: one event per line, readable with `cat` and `grep`.
 
-import std/[json, strutils]
+import std/[json, strutils, os]
 import ./[types, store]
 
 type FileStore* = ref object of Store
@@ -12,6 +12,11 @@ when not defined(windows):
   proc fsync(fd: cint): cint {.importc, header: "<unistd.h>".}
 
 proc openFileStore*(path: string, sync = false): FileStore =
+  ## A last line cut short by a crash is cut off, so the next append starts on a fresh line.
+  if fileExists(path):
+    let text = readFile(path)
+    if text.len > 0 and text[^1] != '\n':
+      writeFile(path, text[0 .. text.rfind('\n')])
   FileStore(path: path, f: open(path, fmAppend), sync: sync)
 
 method append*(s: FileStore, evs: openArray[Envelope]) =
