@@ -62,6 +62,7 @@ suite "replay":
     script(rt)
     rt.store.close()
     let again = replay[DeskApp](openFileStore(path))
+    again.store.close()
     check again.seq == 16
     check stateHash(again.app) == stateHash(mem.app)
 
@@ -83,6 +84,7 @@ suite "replay":
     f.write "{\"seq\":99,\"at\":1,\"kind\":\"Sai"
     f.close
     let again = replay[DeskApp](openFileStore(path))
+    again.store.close()
     check again.seq == 16
     check stateHash(again.app) == live
 
@@ -102,5 +104,6 @@ suite "replay":
     let total = next.seq
     next.store.close()
     let again = replay[DeskApp](openFileStore(path))
+    again.store.close()
     check again.seq == total
     check stateHash(again.app) == live
