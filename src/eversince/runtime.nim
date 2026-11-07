@@ -75,15 +75,6 @@ proc redeliver*[A](rt: var Runtime[A], processor: string, e: Envelope) =
   deliver(rt.app, processor, e, proc (n: string, d: JsonNode) = queue.add (n, d))
   for (n, d) in queue: discard rt.execute(n, d)
 
-proc rewind*[A](rt: var Runtime[A], processor: string, to = 0'i64) =
-  ## Move a processor's position back to `to` (the start by default), so that the next `catchUp`
-  ## gives it the log again from there: how a processor's own record of the world is rebuilt.
-  mixin processors
-  if rt.positions.isNil: rt.positions = MemPositions()
-  rt.positions.save [(processor, to)]
-  let low = rt.lowest(processors(rt.app))
-  rt.pending = rt.store.load.filterIt(it.seq > low)
-
 proc replay*[A](store: Store, positions: Positions = nil): Runtime[A] =
   ## The views are a fold of the log: no decision runs again, no processor fires. The processors'
   ## positions are those in `positions`, none for a processor not in it; `catchUp` then gives them

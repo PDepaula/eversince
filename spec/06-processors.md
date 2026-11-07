@@ -51,8 +51,6 @@ remembered positions, and catches up. Replay itself gives no event to any proces
   commands, being repeat-safe, are refused where already done.
 - A position **past the head of the log** means the log was deleted and began again. It is
   brought back to the head: the processor is not stuck waiting for a `seq` that will not come.
-- A kit SHOULD let a caller **rewind** one processor to a position, so that a processor's own
-  record of the world can be rebuilt from the log. The next catch-up gives it the log from there.
 - A caller that keeps no positions treats every processor as having been given the whole log, so
   that replay does not run old effects again.
 

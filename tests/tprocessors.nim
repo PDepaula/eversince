@@ -1,5 +1,5 @@
 ## Processors with a remembered position: delivery at least once, repeat-safe commands, a restart
-## from the memory store and from the file store, replay, rewind, and a log that was reset.
+## from the memory store and from the file store, replay, and a log that was reset.
 import std/[unittest, os, strutils, hashes]
 import eversince
 import ../examples/desk/desk
@@ -148,21 +148,6 @@ suite "processor positions":
     check rt.seq == 5
     check agentRuns == 1
     check positions.get("TurnRunner") == 5
-
-  test "rewind gives a processor the log again from a position":
-    var rt = Runtime[DeskApp](store: MemStore(), positions: MemPositions())
-    fresh rt
-    rt.send "cat"
-    check agentRuns == 1
-    rt.rewind("StepRunner")                    # it has no work in this log: nothing to see
-    rt.catchUp()
-    check agentRuns == 1
-    rt.rewind("TurnRunner", 1)                 # from the second event: the turn start
-    check rt.positions.get("TurnRunner") == 1
-    rt.catchUp()
-    check agentRuns == 2
-    check rt.seq == 5                          # its commands were stale
-    check rt.positions.get("TurnRunner") == 5
 
   test "an unreadable positions file raises instead of starting every processor over":
     let pos = work / "bad.positions"
