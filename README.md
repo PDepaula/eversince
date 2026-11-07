@@ -128,7 +128,7 @@ than 10 steps continues on a second row; the SVG carries its own colours (light 
 Needs Nim 2.2 or newer.
 
 ```
-nimble test      # model, desk, tally, picture, conformance, must-fail build and SQLite tests (no SQLite on Windows)
+nimble test      # model, desk, tally, picture, conformance, must-fail build, command line and SQLite tests (no SQLite on Windows)
 nimble demo      # the desk example's evidence run: scenarios, replay across stores, timings
 nimble tool      # builds bin/eversince (catalog, check, pic, scenarios, size)
 ```
