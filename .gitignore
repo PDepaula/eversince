@@ -15,5 +15,6 @@ examples/**/*
 !examples/**/*.*
 tests/*
 !tests/*.*
+!tests/errors/
 tools/*
 !tools/*.*
