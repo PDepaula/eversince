@@ -1,0 +1,35 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jiro4989/setup-nim-action@v2
+        with:
+          nim-version: '2.2.x'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Nim version
+        run: nim --version
+      - name: Tests
+        run: nimble test
+      - name: Desk evidence run (no SQLite on Windows)
+        if: runner.os != 'Windows'
+        run: nim c -r --hints:off -d:release examples/desk/demo.nim 200
+      - name: Desk evidence run (Windows)
+        if: runner.os == 'Windows'
+        run: nim c -r --hints:off -d:release -d:eversinceNoSqlite examples/desk/demo.nim 200
