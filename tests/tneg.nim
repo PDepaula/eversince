@@ -33,13 +33,14 @@ proc compilerPath(): string =
 proc runWithLimit(args: seq[string]): Outcome =
   ## Run the compiler, capture stdout and stderr together, kill it after `timeLimitMs`.
   ## The output goes to a file, not a pipe: on Windows a zero-length write by the compiler reads
-  ## as end-of-stream and cut the captured text short. `cmd /c` drops the outermost quotes of its
-  ## command line, so on Windows the whole line gets one more pair.
+  ## as end-of-stream and cut the captured text short. On Windows `poEvalCommand` hands the line
+  ## straight to CreateProcess with no shell, so `cmd.exe /c` is spelled out; `cmd /c` drops the
+  ## outermost quotes of its command line, so the whole line gets one more pair.
   let outFile = work / ("out-" & $caseNo & ".txt")
   var line = quoteShell(compilerPath())
   for a in args: line.add " " & quoteShell(a)
   line.add " > " & quoteShell(outFile) & " 2>&1"
-  when defined(windows): line = "\"" & line & "\""
+  when defined(windows): line = "cmd.exe /c \"" & line & "\""
   let p = startProcess(line, options = {poEvalCommand, poUsePath})
   var finished: Atomic[bool]
   var expired: Atomic[bool]
