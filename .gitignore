@@ -1,0 +1,10 @@
+# compiled programs (config.nims sends them to bin/) and Nim's cache
+bin/
+nimcache/
+*.exe
+*.o
+
+# editor and agent local files
+.claude/
+.vscode/
+.idea/
