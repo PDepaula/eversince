@@ -39,8 +39,9 @@ Each is the desk example built with one deliberate mistake: `-d:negEmit`, `-d:ne
 `-d:negEnv`, `-d:negView`, `-d:negQuery`, `-d:negIssue` (lines in `examples/desk/desk.nim`), or an
 edit to a copy of `desk.em` (a changed `produces`, an added block, a deleted block, a bogus slice,
 and `-d:eversinceStrict` with a command removed from its screen). All eleven stop with the
-errors listed in the design notes, and the unedited build passes. They are not automated as
-tests: turning them into tests is M1.
+errors listed in the design notes, and the unedited build passes. `tests/tneg.nim` runs all
+eleven (plus the unedited build, with and without strict mode) and asserts each one fails with a
+stable fragment of its error.
 
 ## Picture and compile time
 
