@@ -9,7 +9,7 @@ srcDir        = "src"
 requires "nim >= 2.2.0"
 
 task test, "Run the tests (the SQLite store test is skipped on Windows)":
-  var tests = @["tmodel", "tdesk", "ttally", "tpicture", "tconform", "tdigest", "tforget", "terrors", "tneg", "tcli", "tcli_e2e"]
+  var tests = @["tmodel", "tdesk", "ttally", "tpicture", "tconform", "tprocessors", "tdigest", "tforget", "terrors", "tneg", "tcli", "tcli_e2e"]
   when not defined(windows):
     tests.add "tsqlite"
   for t in tests:

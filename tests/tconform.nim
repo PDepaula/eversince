@@ -127,6 +127,8 @@ suite "fixtures: model check":
 
 proc envJson(e: Envelope): JsonNode = %*{"seq": e.seq, "at": e.at, "kind": e.kind, "data": e.data}
 
+proc envKind(e: Envelope): JsonNode = %*{"kind": e.kind, "data": e.data}
+
 proc readLog(path: string): seq[Envelope] =
   ## Reads a log as a reader of an existing file does: the file is put in place after the store
   ## is opened, so what is tested is `load`'s own handling of a torn tail, not the clean-up that
@@ -195,6 +197,39 @@ suite "fixtures: event log":
               let got = all{lowerFirst(name)}
               for key, val in want: check got{key} == val
           if then.hasKey("digest"): check stateDigest(app) == then["digest"].getStr
+
+# -- processors --------------------------------------------------------------------------------
+
+suite "fixtures: processors":
+  let dir = root / "processors"
+  for c in jsonLines(dir / "cases.jsonl"):
+    test c["name"].getStr:
+      check c["app"].getStr == "desk"
+      # the desk's shell, as the fixtures README names it
+      runAgent = proc (game, text: string): seq[string] = @["On it.", "Done."]
+      runStep = proc (game, kind: string): int = (if kind == "check": 0 else: 1)
+      cancelAgent = proc (turn: int) = discard
+      let given = c["log"].getElems
+      let store = MemStore()
+      var n = 0'i64
+      store.append given.mapIt((inc n; Envelope(seq: n, at: 1_700_000_000_000'i64, kind: it["kind"].getStr, data: it["data"])))
+      let positions = MemPositions()
+      for name, pos in c["positions"]: positions.save [(name, pos.getBiggestInt)]
+      var rt = replay[DeskApp](store, positions)
+      rt.clock = proc (): int64 = 1_700_000_100_000'i64
+      if c.hasKey("deliver"):
+        for d in c["deliver"]:
+          rt.redeliver(d["processor"].getStr, store.load[d["seq"].getInt - 1])
+      if c{"resume"}.getBool: rt.catchUp()
+      let then = c["then"]
+      if then.hasKey("events"): check store.load[given.len .. ^1].map(envKind) == then["events"].getElems
+      if then.hasKey("positions"):
+        for name, pos in then["positions"]: check positions.get(name) == pos.getBiggestInt
+      if then.hasKey("view"):
+        let all = %rt.app
+        for name, want in then["view"]:
+          let got = all{lowerFirst(name)}
+          for key, val in want: check got{key} == val
 
 # -- scenarios ---------------------------------------------------------------------------------
 
