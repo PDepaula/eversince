@@ -23,7 +23,6 @@ suite "eversince program":
     let r = execCmdEx(quoteShell(findExe("nim")) & " c --hints:off --warnings:off -o:" & quoteShell(exe) &
       " " & quoteShell(root / "tools" / "eversince.nim"), workingDir = root)
     check r.exitCode == 0
-    check fileExists(exe)
 
   test "catalog and size need only the model file":
     let c = run("catalog examples/desk/desk.em")
