@@ -6,8 +6,8 @@ code against the model file in both directions, so a large codebase written by m
 people) stays readable from one page: what changes the app, what it remembers, what it shows.
 
 Status: **milestone M0** (private). The prototype's code, tests and the Para Studio desk
-example are in; the spec has a first draft; the picture, error polish and the compiler-check
-tests are M1. Memory and file stores only; no durable store yet. Python kit later, in its own repo.
+example are in; the spec has a first draft; the picture and error polish
+are M1. Memory and file stores only; no durable store yet. Python kit later, in its own repo.
 
 ## Example
 
@@ -78,7 +78,7 @@ echo rt.app.answer("CurrentTotal", %*{})          # 3
 Needs Nim 2.2 or newer.
 
 ```
-nimble test      # model, desk, tally, picture, conformance and SQLite tests (no SQLite on Windows)
+nimble test      # model, desk, tally, picture, conformance, must-fail build and SQLite tests (no SQLite on Windows)
 nimble demo      # the desk example's evidence run: scenarios, replay across stores, timings
 nimble tool      # builds bin/eversince (commands: size, pic)
 ```
