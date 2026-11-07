@@ -9,13 +9,13 @@ srcDir        = "src"
 requires "nim >= 2.2.0"
 
 task test, "Run the tests (the SQLite store test is skipped on Windows)":
-  var tests = @["tmodel", "tdesk", "ttally", "tpicture", "tconform", "terrors", "tneg"]
+  var tests = @["tmodel", "tdesk", "ttally", "tpicture", "tconform", "terrors", "tneg", "tcli", "tcli_e2e"]
   when not defined(windows):
     tests.add "tsqlite"
   for t in tests:
     exec "nim c -r --hints:off --warnings:off tests/" & t & ".nim"
 
-task tool, "Build the command line tool into bin/eversince":
+task tool, "Build the command line tool into bin/eversince (catalog, check, pic, scenarios, size)":
   exec "nim c --hints:off -o:bin/eversince tools/eversince.nim"
 
 task demo, "Run the desk example's evidence run (scenarios, replay across stores, timings)":
