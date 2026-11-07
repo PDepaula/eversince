@@ -1,0 +1,63 @@
+# eversince catalog
+size: 8 commands, 9 events, 2 views, 2 query/queries, 2 processors, 2 screens, 6 slices
+
+## kinds
+- screen: where a person acts and looks: the queries it shows and the commands it offers
+- command: a request to change state: decides from the views it reads, produces events or refuses with a code
+- event: an immutable fact: something that happened
+- view: what the app remembers: a fold of the events it consumes
+- query: a question answered from views; changes nothing
+- processor: background work that reacts to events and issues commands (the only block with side effects)
+- record: a plain value type that events, commands and views carry
+- slice: one story as a path of blocks: screen, command, event, view, query, back to the screen
+
+## screens (2)
+- ChatPanel - shows ChatSince; offers NewConversation, PickAgent, SendMessage, StopTurn
+- StepsPanel - shows DeskState; offers StartStep
+
+## commands (8)
+- EndStep(step:int code:int) - reads Desk; produces StepEnded; refuses staleStep; issued by StepRunner
+- EndTurn(game:string turn:int outcome:string) - reads Desk; produces TurnEnded; refuses staleTurn; issued by TurnRunner
+- NewConversation(game:string) - reads Desk; produces ConversationCleared; refuses busy; on screen ChatPanel
+- PickAgent(game:string agent:string) - reads Desk; produces AgentPicked; refuses busy, whichAgent; on screen ChatPanel
+- RecordSay(game:string turn:int text:string) - reads Desk; produces Said; refuses staleTurn; issued by TurnRunner
+- SendMessage(game:string text:string) - reads Desk; produces MessageSent, TurnStarted; refuses badMessage, busy; on screen ChatPanel
+- StartStep(game:string kind:string message:string) - reads Desk; produces StepStarted; refuses busy, needsMessage; on screen StepsPanel
+- StopTurn(game:string) - reads Desk; produces StopRequested; refuses noTurn; on screen ChatPanel
+
+## events (9)
+- AgentPicked(game:string agent:string) - produced by PickAgent; consumed by Chat, Desk
+- ConversationCleared(game:string) - produced by NewConversation; consumed by Chat
+- MessageSent(game:string text:string) - produced by SendMessage; consumed by Chat
+- Said(game:string turn:int text:string) - produced by RecordSay; consumed by Chat
+- StepEnded(step:int code:int) - produced by EndStep; consumed by Desk
+- StepStarted(game:string step:int kind:string) - produced by StartStep; consumed by Desk, StepRunner
+- StopRequested(game:string turn:int) - produced by StopTurn; consumed by TurnRunner
+- TurnEnded(game:string turn:int outcome:string) - produced by EndTurn; consumed by Chat, Desk
+- TurnStarted(game:string turn:int agent:string) - produced by SendMessage; consumed by Desk, TurnRunner
+
+## views (2)
+- Chat(lines:list[ChatLine]) - folds AgentPicked, ConversationCleared, MessageSent, Said, TurnEnded; read by ChatSince
+- Desk(running:list[RunningTurn] lastTurn:int stepRunning:bool stepId:int stepKind:string stepGame:string lastStepCode:int picks:list[AgentPick]) - folds AgentPicked, StepEnded, StepStarted, TurnEnded, TurnStarted; read by ChatSince, DeskState, EndStep, EndTurn, NewConversation, PickAgent, RecordSay, SendMessage, StartStep, StopTurn
+
+## queries (2)
+- ChatSince(game:string since:int) - reads Chat, Desk; returns ChatPage; on screen ChatPanel
+- DeskState - reads Desk; returns Desk; on screen StepsPanel
+
+## processors (2)
+- StepRunner - on StepStarted; issues EndStep
+- TurnRunner - on StopRequested, TurnStarted; issues EndTurn, RecordSay
+
+## records (4)
+- AgentPick(game:string agent:string)
+- ChatLine(game:string who:string text:string)
+- ChatPage(running:bool next:int lines:list[ChatLine])
+- RunningTurn(game:string turn:int)
+
+## slices (6)
+- pick a producer: ChatPanel -> PickAgent -> AgentPicked -> Desk -> SendMessage
+- run a step: StepsPanel -> StartStep -> StepStarted -> StepRunner -> EndStep -> StepEnded -> Desk -> DeskState -> StepsPanel
+- send a message: ChatPanel -> SendMessage -> TurnStarted -> TurnRunner -> RecordSay -> Said -> Chat -> ChatSince -> ChatPanel
+- start over: ChatPanel -> NewConversation -> ConversationCleared -> Chat -> ChatSince -> ChatPanel
+- stop a turn: ChatPanel -> StopTurn -> StopRequested -> TurnRunner -> EndTurn -> TurnEnded -> Chat
+- the turn ends: TurnRunner -> EndTurn -> TurnEnded -> Desk -> ChatSince -> ChatPanel
