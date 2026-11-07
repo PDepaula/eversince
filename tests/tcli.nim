@@ -81,20 +81,20 @@ suite "catalog":
     check '\r' notin c
     check c.endsWith("\n") and not c.endsWith("\n\n")
 
-suite "picture layout":
+suite "stories layout (pic --layout stories)":
   test "the desk picture is the golden file":
-    golden "desk.svg", render(parseModel(readFile(deskEm)))
+    golden "desk.stories.svg", renderStories(parseModel(readFile(deskEm)))
 
   test "the same model gives the same bytes, whatever the order of the blocks":
     let text = readFile(deskEm)
     let m = parseModel(text)
-    check render(m) == render(m)
+    check renderStories(m) == renderStories(m)
     let blocksReversed = text.splitLines.filterIt(not it.startsWith("slice")).reversed.join("\n") & "\n" &
       text.splitLines.filterIt(it.startsWith("slice")).join("\n")
-    check render(parseModel(blocksReversed)) == render(m)
+    check renderStories(parseModel(blocksReversed)) == renderStories(m)
 
   test "slices are grouped by their screen, background work last":
-    let svg = render(parseModel(readFile(deskEm) & "slice only the runner : TurnRunner -> EndTurn -> TurnEnded\n"))
+    let svg = renderStories(parseModel(readFile(deskEm) & "slice only the runner : TurnRunner -> EndTurn -> TurnEnded\n"))
     let a = svg.find("id=\"group-chatpanel\"")
     let b = svg.find("id=\"group-stepspanel\"")
     let c = svg.find("id=\"group-background-work\"")
@@ -105,8 +105,8 @@ suite "picture layout":
     proc slice(n: int): string =
       "screen A | commands C0\ncommand C0 | produces E0\nevent E0\nslice long : " &
         toSeq(0 ..< n).mapIt(if it mod 2 == 0: "A" else: "C0").join(" -> ")
-    check "<path class=\"em-edge\"" notin render(parseModel(slice(maxCols)))
-    let wrapped = render(parseModel(slice(maxCols + 1)))
+    check "<path class=\"em-edge\"" notin renderStories(parseModel(slice(maxCols)))
+    let wrapped = renderStories(parseModel(slice(maxCols + 1)))
     check "<path class=\"em-edge\"" in wrapped
     # the second row adds three lanes of labels
     check wrapped.count("who acts") == 2
@@ -114,29 +114,29 @@ suite "picture layout":
   test "a long name is split at a capital letter, and the full line is in a tooltip":
     let name = "ConversationClearedAndArchivedForGoodMeasureEvent"
     let m = parseModel("event " & name & " x:int\nslice s : " & name)
-    let svg = render(m)
+    let svg = renderStories(m)
     check name notin svg.replace("<title>event " & name & " x:int</title>", "")
     check "<title>event " & name & " x:int</title>" in svg
 
   test "a step that is not in the model file is drawn as missing, with its name":
-    let svg = render(parseModel("slice s : Ghost"))
+    let svg = renderStories(parseModel("slice s : Ghost"))
     check "em-missing" in svg
     check "Ghost" in svg
     check "NOT IN MODEL" in svg
 
   test "a model without slices still gives a valid picture":
-    let svg = render(parseModel("event A x:int\n"))
+    let svg = renderStories(parseModel("event A x:int\n"))
     check svg.startsWith("<svg") and svg.strip.endsWith("</svg>")
     check "viewBox=\"0 0 " in svg and "no slices yet" in svg
 
   test "names are escaped":
-    let svg = render(parseModel("slice a<b&c : X"))
+    let svg = renderStories(parseModel("slice a<b&c : X"))
     check "a&lt;b&amp;c" in svg
     check "a<b" notin svg
 
   test "the style has no custom properties, so any SVG renderer can draw it":
-    check "var(--" notin render(parseModel(base))
-    check "prefers-color-scheme:dark" in render(parseModel(base))
+    check "var(--" notin renderStories(parseModel(base))
+    check "prefers-color-scheme:dark" in renderStories(parseModel(base))
 
 suite "check report":
   test "a model that matches its code is ok":
@@ -257,6 +257,56 @@ suite "exit codes":
     check lf(readFile(out1)).startsWith("<svg")
     check run(@["pic", deskEm]).outp == readFile(out1)
     check run(@["pic", deskEm, "-"]).outp == readFile(out1)
+    check lf(readFile(out1)) == readFile(root / "tests" / "golden" / "desk.svg").lf
+
+suite "pic flags":
+  test "pic with no flag draws the swimlane, names only":
+    let r = run(@["pic", deskEm])
+    check r.code == exitOk
+    check "em-swim" in r.outp and "<g class=\"em-box em-command\"" in r.outp
+    check "class=\"em-field" notin r.outp
+    check r.outp == renderSwimlane(parseModel(readFile(deskEm)))
+
+  test "--fields and --spacious change the picture, and combine":
+    let plain = run(@["pic", deskEm]).outp
+    let fields = run(@["pic", deskEm, "--fields"]).outp
+    let spacious = run(@["pic", deskEm, "--spacious"]).outp
+    let both = run(@["pic", deskEm, "--spacious", "--fields"]).outp
+    check "class=\"em-field" in fields and "class=\"em-field" in both and "class=\"em-field" notin spacious
+    check [plain, fields, spacious, both].deduplicate.len == 4
+    check both == run(@["pic", "--fields", deskEm, "--spacious", "-"]).outp
+    check lf(both) == lf(readFile(root / "tests" / "golden" / "desk.fields.spacious.svg"))
+    check run(@["pic", deskEm, "--reads"]).outp.count("em-reads\"") > 0
+
+  test "--layout stories is the old picture, and the flags that belong to the swimlane are refused with it":
+    check lf(run(@["pic", deskEm, "--layout", "stories"]).outp) == lf(readFile(root / "tests" / "golden" / "desk.stories.svg"))
+    check run(@["pic", deskEm, "--layout=stories"]).outp == run(@["pic", deskEm, "--layout", "stories"]).outp
+    check run(@["pic", deskEm, "--layout", "swimlane"]).outp == run(@["pic", deskEm]).outp
+    for flag in ["--fields", "--spacious", "--reads", "--html"]:
+      let r = run(@["pic", deskEm, "--layout", "stories", flag])
+      check r.code == exitUsage
+      check "belong to the swimlane layout" in r.errp
+    let bad = run(@["pic", deskEm, "--layout", "grouped"])
+    check bad.code == exitUsage and "unknown layout grouped" in bad.errp
+    check run(@["pic", deskEm, "--layout"]).code == exitUsage
+
+  test "--html writes one page, to a file or to stdout":
+    let out1 = work / "o.html"
+    createDir(work)
+    let r = run(@["pic", deskEm, out1, "--html", "--fields"])
+    check r.code == exitOk and r.outp.startsWith("wrote ")
+    let page = readFile(out1)
+    check page.startsWith("<!doctype html>") and "<title>Event model: desk</title>" in page
+    check run(@["pic", deskEm, "--html", "--fields"]).outp == page
+    check run(@["pic", deskEm, "-", "--html", "--fields"]).outp == page
+    check "\"fields\":true" in page and "\"spacious\":false" in page
+    check run(@["pic", deskEm, "--html"]).outp != page
+
+  test "the help names every pic flag":
+    let h = run(@["pic", "--help"]).outp
+    for flag in ["--fields", "--spacious", "--reads", "--layout", "stories", "--html", "swimlane"]:
+      check flag in h
+    check "--fields" in run(@["help"]).outp and "swimlane" in run(@["help"]).outp
 
 suite "scenarios":
   setup:

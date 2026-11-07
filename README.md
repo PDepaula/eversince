@@ -91,7 +91,8 @@ except `--app`, which builds the app into a small program (a few seconds, needs 
 ```
 eversince catalog <model.em>                         the blocks and what each is, as a list to read
 eversince check <model.em> [--app <app.nim>] [--strict]   the model check, optionally against the code
-eversince pic <model.em> [<out.svg>]                 the picture
+eversince pic <model.em> [<out>] [--fields] [--spacious] [--reads] [--layout stories] [--html]
+                                                     the picture: a swimlane timeline of the whole model
 eversince scenarios <file.jsonl> --app <app.nim> [--model <model.em>] [--strict]
 eversince size <model.em>                            the size line
 ```
@@ -134,10 +135,26 @@ desk's outputs are kept in `tests/golden/` and the tests compare against them.
 
 ## The picture
 
-`eversince pic examples/desk/desk.em desk.svg` draws the model file alone (no code): slices grouped
-under the first screen they pass through, one band per slice, three lanes (who acts, requests and
-answers, facts), steps left to right. Every box holds its block's line as a tooltip; a slice longer
-than 10 steps continues on a second row; the SVG carries its own colours (light and dark).
+`eversince pic examples/desk/desk.em desk.svg` draws the model file alone (no code) as a swimlane
+timeline: every block once, in lanes from the top (who acts: screens and processors, commands,
+events, views, queries), with time running left to right (events in the order the slices first
+mention them). The arrows are the edges the blocks declare, nothing else; records are not drawn.
+Every box holds its block's line as a tooltip; the SVG carries its own colours (light and dark).
+The layout is written out in [`spec/15-picture.md`](spec/15-picture.md).
+
+What is shown is a choice of the flags, so nobody edits the picture by hand:
+
+| Flag | Effect |
+|---|---|
+| (none) | names only, compact |
+| `--fields` | each box also lists its fields, and a command its refusal codes |
+| `--spacious` | looser spacing and larger text |
+| `--reads` | also the dashed arrows from a view to the commands and queries that read it |
+| `--html` | one self-contained page instead of an SVG: switches for fields, density and the dashed arrows, wheel zoom, drag to pan, one-finger pan and two-finger pinch, fit to the window, and a click on a box or a story to light up its arrows |
+| `--layout stories` | the earlier picture: one band per slice, grouped by screen |
+
+`--fields`, `--spacious` and `--reads` combine, and with `--html` choose what shows when the page
+opens.
 
 ## Build and test
 
@@ -154,12 +171,12 @@ nimble tool      # builds bin/eversince (catalog, check, pic, scenarios, size)
 | Path | What |
 |---|---|
 | `src/eversince.nim` | the public import |
-| `src/eversince/` | `blocks` (macros, `sealModel`), `model` (model-file parser and checker), `runtime`, `store`, `store_file`, `store_sqlite`, `digest`, `picture`, `catalog`, `cli`, `types` |
+| `src/eversince/` | `blocks` (macros, `sealModel`), `model` (model-file parser and checker), `runtime`, `store`, `store_file`, `store_sqlite`, `digest`, `picture` (stories layout and the choice of layout), `swimlane` (the default picture and its page), `swimpage`, `picstyle`, `catalog`, `cli`, `types` |
 | `tools/eversince.nim` | command line: `catalog`, `check`, `pic`, `scenarios`, `size` |
 | `spec/` | the language-neutral spec, first draft, and its fixtures |
 | `examples/tally/` | the README example |
 | `examples/desk/` | the Para Studio desk: 8 commands, 9 events, 2 views, 20 scenarios, and the evidence run |
-| `tests/` | the test suite; `tests/golden/` holds the desk's catalogue and picture byte for byte |
+| `tests/` | the test suite; `tests/golden/` holds the desk's catalogue and pictures, and a copy of Para Studio's model with its picture, byte for byte |
 | `docs/m0-evidence.md` | the commands and results that show the prototype carried over |
 
 ## Licence
