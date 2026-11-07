@@ -1,0 +1,2 @@
+# Model files and fixtures are read byte for byte by tools and compile-time code: keep LF everywhere.
+* text=auto eol=lf
